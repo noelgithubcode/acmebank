@@ -1,0 +1,96 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model NoelBankAppPRJ.Mocks.MockBankUser
+@using System.Collections.Generic
+
+
+<div class="d-flex">
+    <div class="mr-auto p-2"><h6><span class="text-left">@Model.Bank.BankName</span></h6></div>
+    <div class="p-2"><h6><span class="text-right text-muted">Hello @Model.User.UserName</span></h6></div>
+</div>
+
+@{
+    List<string> accountTypes = (from acctType in Model.Transactions
+                                 select acctType.BankAccountType.ToString())
+                                .Distinct().ToList();
+
+    var userCheckingBalance = Model.User.UserAccounts.First(x => x.BankAccountType == BankAccountTypeEnum.Checking).UserBalance;
+    var userInvestmentBalance = Model.User.UserAccounts.First(x => x.BankAccountType == BankAccountTypeEnum.Investment).UserBalance;
+
+    foreach (var accountType in accountTypes)
+    {
+        var tableID = $"tbl{accountType}";
+        var accountTransactions = (from accountTransaction in Model.Transactions
+                                   where accountType == accountTransaction.BankAccountType.ToString()
+                                   select accountTransaction).ToList();
+
+
+        <div class="shadow p-3 mb-5 bg-white rounded container">
+            <div class="card">
+                <div class="card-header">
+
+                    @if (accountType == BankAccountTypeEnum.Checking.ToString())
+                    {
+                        <h6>
+                            <span>@accountType</span><br />
+                            <span>Original Amount: @string.Format("{0:C}", 10000)</span><br />
+                            <span>Balance: </span><span>@string.Format("{0:C}", userCheckingBalance)</span>
+                        </h6>
+                    }
+                    else
+                    {
+                        <h6>
+                            <span>@accountType</span><br />
+                            <span>Original Amount: @string.Format("{0:C}", 10000)</span><br />
+                            <span>Balance: </span><span>@string.Format("{0:C}", userInvestmentBalance)</span>
+                        </h6>
+                    }
+
+                </div>
+                <div class="card-body">
+                    <table class="display" id='@tableID' style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left; border: 2px solid red;">Transaction Identifier</th>
+                                <th>Investment Type</th>
+                                <th>Transaction Type</th>
+                                <th>Transaction Date</th>
+                                <th>Transaction Amount($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var account in accountTransactions)
+                            {
+                                var investmentType =
+                                    account.InvestmentType == 0 ?
+                                    "Corporate" :
+                                    account.InvestmentType.ToString();
+                                <tr class="ml-3">
+                                    <td>@account.TransactionPK</td>
+                                    <td>@investmentType</td>
+                                    <td>@account.TransactionType.ToString()</td>
+                                    <td>@account.TransactionDate.ToString("MM/dd/yyyy hh:mm tt")</td>
+                                    <td>@account.TransactionAmount</td>
+                                </tr>
+
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@section Scripts
+{
+    <script src="~/ts/bankusertransactions.js"></script>
+    <script>
+        $(document).ready(function () {
+            BankUserTransaction.InitDataTables();
+        });
+    </script>
+}
+
+
